@@ -59,8 +59,6 @@
 
 namespace Poco {
 
-
-class Runnable;
 class ThreadLocalStorage;
 
 
@@ -158,7 +156,7 @@ public:
 		/// Returns the thread's stack size in bytes.
 		/// If the default stack size is used, 0 is returned.
 
-	void start(Runnable& target);
+	void start(const Runnable& target);
 		/// Starts the thread with the given target.
 		///
 		/// Note that the given Runnable object must be

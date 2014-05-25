@@ -43,13 +43,12 @@
 #include "Poco/Foundation.h"
 #include "Poco/Thread.h"
 #include "Poco/Mutex.h"
-#include <vector>
+#include "Poco/Runnable.h"
 
+#include <vector>
 
 namespace Poco {
 
-
-class Runnable;
 class PooledThread;
 
 
@@ -119,23 +118,23 @@ public:
 	int available() const;
 		/// Returns the number available threads.
 
-	void start(Runnable& target);
+	void start(const Runnable& target);
 		/// Obtains a thread and starts the target.
 		/// Throws a NoThreadAvailableException if no more
 		/// threads are available.
 
-	void start(Runnable& target, const std::string& name);
+	void start(const Runnable& target, const std::string& name);
 		/// Obtains a thread and starts the target.
 		/// Assigns the given name to the thread.
 		/// Throws a NoThreadAvailableException if no more
 		/// threads are available.
 
-	void startWithPriority(Thread::Priority priority, Runnable& target);
+	void startWithPriority(Thread::Priority priority, const Runnable& target);
 		/// Obtains a thread, adjusts the thread's priority, and starts the target.
 		/// Throws a NoThreadAvailableException if no more
 		/// threads are available.
 
-	void startWithPriority(Thread::Priority priority, Runnable& target, const std::string& name);
+	void startWithPriority(Thread::Priority priority, const Runnable& target, const std::string& name);
 		/// Obtains a thread, adjusts the thread's priority, and starts the target.
 		/// Assigns the given name to the thread.
 		/// Throws a NoThreadAvailableException if no more

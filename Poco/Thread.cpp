@@ -91,7 +91,7 @@ Thread::Priority Thread::getPriority() const
 }
 
 
-void Thread::start(Runnable& target)
+void Thread::start(const Runnable& target)
 {
 	startImpl(target);
 }

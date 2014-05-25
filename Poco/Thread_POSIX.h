@@ -103,7 +103,7 @@ public:
 	static int getMaxOSPriorityImpl(int policy);
 	void setStackSizeImpl(int size);
 	int getStackSizeImpl() const;
-	void startImpl(Runnable& target);
+	void startImpl(const Runnable& target);
 	void startImpl(Callable target, void* pData = 0);
 
 	void joinImpl();
@@ -164,7 +164,7 @@ private:
 		#endif
 		}
 
-		Runnable*     pRunnableTarget;
+		Runnable     pRunnableTarget;
 		AutoPtr<CallbackData> pCallbackTarget;
 		pthread_t     thread;
 		int           prio;

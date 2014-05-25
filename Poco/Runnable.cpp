@@ -40,14 +40,14 @@
 namespace Poco {
 
 
-Runnable::Runnable()
-{
-}
-
-
-Runnable::~Runnable()
-{
-}
+//Runnable::Runnable()
+//{
+//}
+//
+//
+//Runnable::~Runnable()
+//{
+//}
 
 
 } // namespace Poco

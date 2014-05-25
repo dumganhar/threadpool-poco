@@ -176,7 +176,7 @@ void ThreadImpl::setStackSizeImpl(int size)
 }
 
 
-void ThreadImpl::startImpl(Runnable& target)
+void ThreadImpl::startImpl(const Runnable& target)
 {
 	if (_pData->pRunnableTarget)
 		throw SystemException("thread already running");
@@ -193,10 +193,10 @@ void ThreadImpl::startImpl(Runnable& target)
 		}
 	}
 
-	_pData->pRunnableTarget = &target;
+	_pData->pRunnableTarget = target;
 	if (pthread_create(&_pData->thread, &attributes, runnableEntry, this))
 	{
-		_pData->pRunnableTarget = 0;
+		_pData->pRunnableTarget = nullptr;
 		pthread_attr_destroy(&attributes);	
 		throw SystemException("cannot start thread");
 	}
@@ -376,7 +376,7 @@ void* ThreadImpl::runnableEntry(void* pThread)
 	AutoPtr<ThreadData> pData = pThreadImpl->_pData;
 	try
 	{
-		pData->pRunnableTarget->run();
+		pData->pRunnableTarget();
 	}
 	catch (Exception& exc)
 	{
@@ -391,7 +391,7 @@ void* ThreadImpl::runnableEntry(void* pThread)
 		ErrorHandler::handle();
 	}
 
-	pData->pRunnableTarget = 0;
+	pData->pRunnableTarget = nullptr;
 	pData->done.set();
 	return 0;
 }

@@ -35,7 +35,7 @@
 
 
 #include "Poco/ThreadPool.h"
-#include "Poco/Runnable.h"
+//#include "Poco/Runnable.h"
 #include "Poco/Thread.h"
 #include "Poco/Event.h"
 #include "Poco/ThreadLocal.h"
@@ -50,15 +50,15 @@
 namespace Poco {
 
 
-class PooledThread: public Runnable
+class PooledThread
 {
 public:
 	PooledThread(const std::string& name, int stackSize = POCO_THREAD_STACK_SIZE);
 	~PooledThread();
 
 	void start();
-	void start(Thread::Priority priority, Runnable& target);
-	void start(Thread::Priority priority, Runnable& target, const std::string& name);
+	void start(Thread::Priority priority, const Runnable& target);
+	void start(Thread::Priority priority, const Runnable& target, const std::string& name);
 	bool idle();
 	int idleTime();
 	void join();
@@ -69,7 +69,7 @@ public:
 private:
 	volatile bool        _idle;
 	volatile std::time_t _idleTime;
-	Runnable*            _pTarget;
+	Runnable             _pTarget;
 	std::string          _name;
 	Thread               _thread;
 	Event                _targetReady;
@@ -82,7 +82,7 @@ private:
 PooledThread::PooledThread(const std::string& name, int stackSize): 
 	_idle(true), 
 	_idleTime(0), 
-	_pTarget(0), 
+	_pTarget(nullptr),
 	_name(name), 
 	_thread(name),
 	_targetCompleted(false)
@@ -104,24 +104,24 @@ PooledThread::~PooledThread()
 
 void PooledThread::start()
 {
-	_thread.start(*this);
+	_thread.start(std::bind(&PooledThread::run, this));
 	_started.wait();
 }
 
 
-void PooledThread::start(Thread::Priority priority, Runnable& target)
+void PooledThread::start(Thread::Priority priority, const Runnable& target)
 {
 	FastMutex::ScopedLock lock(_mutex);
 	
-	poco_assert (_pTarget == 0);
+	poco_assert (_pTarget == nullptr);
 
-	_pTarget = &target;
+	_pTarget = target;
 	_thread.setPriority(priority);
 	_targetReady.set();
 }
 
 
-void PooledThread::start(Thread::Priority priority, Runnable& target, const std::string& name)
+void PooledThread::start(Thread::Priority priority, const Runnable& target, const std::string& name)
 {
 	FastMutex::ScopedLock lock(_mutex);
 
@@ -139,9 +139,9 @@ void PooledThread::start(Thread::Priority priority, Runnable& target, const std:
 	_thread.setName(fullName);
 	_thread.setPriority(priority);
 	
-	poco_assert (_pTarget == 0);
+	poco_assert (_pTarget == nullptr);
 
-	_pTarget = &target;
+	_pTarget = target;
 	_targetReady.set();
 }
 
@@ -167,7 +167,7 @@ int PooledThread::idleTime()
 void PooledThread::join()
 {
 	_mutex.lock();
-	Runnable* pTarget = _pTarget;
+	Runnable pTarget = _pTarget;
 	_mutex.unlock();
 	if (pTarget)
 		_targetCompleted.wait();
@@ -189,7 +189,7 @@ void PooledThread::release()
 	const long JOIN_TIMEOUT = 10000;
 	
 	_mutex.lock();
-	_pTarget = 0;
+	_pTarget = nullptr;
 	_mutex.unlock();
 
 	_targetReady.set();
@@ -212,7 +212,7 @@ void PooledThread::run()
 			_mutex.unlock();
 			try
 			{
-				_pTarget->run();
+				_pTarget();
 			}
 			catch (Exception& exc)
 			{
@@ -227,7 +227,7 @@ void PooledThread::run()
 				ErrorHandler::handle();
 			}
 			FastMutex::ScopedLock lock(_mutex);
-			_pTarget  = 0;
+			_pTarget  = nullptr;
 #if defined(_WIN32_WCE)
 			_idleTime = wceex_time(NULL);
 #else
@@ -351,25 +351,25 @@ int ThreadPool::allocated() const
 }
 
 
-void ThreadPool::start(Runnable& target)
+void ThreadPool::start(const Runnable& target)
 {
 	getThread()->start(Thread::PRIO_NORMAL, target);
 }
 
 
-void ThreadPool::start(Runnable& target, const std::string& name)
+void ThreadPool::start(const Runnable& target, const std::string& name)
 {
 	getThread()->start(Thread::PRIO_NORMAL, target, name);
 }
 
 
-void ThreadPool::startWithPriority(Thread::Priority priority, Runnable& target)
+void ThreadPool::startWithPriority(Thread::Priority priority, const Runnable& target)
 {
 	getThread()->start(priority, target);
 }
 
 
-void ThreadPool::startWithPriority(Thread::Priority priority, Runnable& target, const std::string& name)
+void ThreadPool::startWithPriority(Thread::Priority priority, const Runnable& target, const std::string& name)
 {
 	getThread()->start(priority, target, name);
 }
